@@ -109,7 +109,8 @@ precedence = (
     ("left", "NOT"),
     ("left", "EQUALS", "NOTEQUAL", "LESSTHAN", "LESSTHANEQ", "GREATERTHAN", "GREATERTHANEQ"),
     ("left", "PLUS", "MINUS"),
-    ("left", "MULTIPLY", "DIVIDE", "MOD")
+    ("left", "MULTIPLY", "DIVIDE", "MOD"),
+    ("left", "LEFTPAREN")
 )
 
 def p_statements_one(p):
