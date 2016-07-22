@@ -12,6 +12,11 @@ any = (function, list) ->
 
 bool = (x) -> if x then 1 else 0;
 
+count = (element, list) ->
+    if not list then 0
+    else if head(list) == element then 1 + self(element, tail(list))
+    else self(element, tail(list));
+
 factorial = (n) ->
     if n <= 1 then 1
     else n * self(n - 1);
@@ -98,6 +103,11 @@ product = (list) ->
 range = (start, end, step) ->
     if start >= end then []
     else [start] + self(start + step, end, step);
+
+reduce = (function, list) ->
+    if not list then list
+    else if not tail(list) then head(list)
+    else function(head(list), self(function, tail(list)));
 
 remove = (index, list) ->
     if not list then list
