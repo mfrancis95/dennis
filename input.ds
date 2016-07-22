@@ -1,0 +1,121 @@
+abs = (n) -> if n < 0 then -1 * n else n;
+
+all = (function, list) ->
+    if not list then 1
+    else if not function(head(list)) then 0
+    else self(function, tail(list));
+
+any = (function, list) ->
+    if not list then 0
+    else if function(head(list)) then 1
+    else self(function, tail(list));
+
+bool = (x) -> if x then 1 else 0;
+
+factorial = (n) ->
+    if n <= 1 then 1
+    else n * self(n - 1);
+
+enumerate = (list, start) ->
+    if not list then []
+    else [[start, head(list)]] + self(tail(list), start + 1);
+
+filter = (function, list) ->
+    if not list then list
+    else if function(head(list)) then head(list) + self(function, tail(list))
+    else self(function, tail(list));
+
+index_helper = (element, list, i) ->
+    if not list then -1
+    else if element == head(list) then i
+    else self(element, tail(list), i + 1);
+
+index = (element, list) -> index_helper(element, list, 0);
+
+insert = (element, index, list) ->
+    if not list then
+        if type(list) == "List" then [element]
+        else if type(list) == "String" then element
+        else list
+    else if index <= 0 then element + list
+    else head(list) + self(element, index - 1, tail(list));
+
+intersperse = (element, list) ->
+    if not list then [element]
+    else if not tail(list) then [head(list), element]
+    else [head(list), element] + self(element, tail(list));
+
+last = (list) ->
+    if not list then null
+    else if not tail(list) then head(list)
+    else self(tail(list));
+
+length = (list) ->
+    if not list then 0
+    else 1 + self(tail(list));
+
+list = (string) ->
+    if not string then []
+    else head(string) + self(tail(string));
+
+map = (function, list) ->
+    if not list then list
+    else function(head(list)) + self(function, tail(list));
+
+max_helper = (list, element) ->
+    if not list then element
+    else if head(list) > element then self(tail(list), head(list))
+    else self(tail(list), element);
+
+max = (list) ->
+    if not list then null
+    else max_helper(tail(list), head(list));
+
+member = (element, list) ->
+    if not list then 0
+    else if element == head(list) then 1
+    else self(element, tail(list));
+
+min_helper = (list, element) ->
+    if not list then element
+    else if head(list) < element then self(tail(list), head(list))
+    else self(tail(list), element);
+
+min = (list) ->
+    if not list then null
+    else min_helper(tail(list), head(list));
+
+power = (base, exponent) ->
+    if base == 0 then 0
+    else if exponent <= 0 then 1
+    else if exponent == 1 then base
+    else base * self(base, exponent - 1);
+
+product = (list) ->
+    if not list then 1
+    else head(list) * self(tail(list));
+
+range = (start, end, step) ->
+    if start >= end then []
+    else [start] + self(start + step, end, step);
+
+remove = (index, list) ->
+    if not list then list
+    else if index <= 0 then tail(list)
+    else head(list) + self(index - 1, tail(list));
+
+repeat = (element, times) ->
+    if times <= 0 then null
+    else element + self(element, times - 1);
+
+reverse = (list) ->
+    if not list then list
+    else self(tail(list)) + head(list);
+
+string = (list) ->
+    if not list then ""
+    else head(list) + self(tail(list));
+
+sum = (list) ->
+    if not list then 0
+    else head(list) + self(tail(list));
