@@ -329,15 +329,15 @@ def function_evaluator(tup):
         return evaluate(tup[2][0])[0]
     elif function == "tail":
         return evaluate(tup[2][0])[1:]
-    stack_identifiers = {
+    frame = {
         "self": function
     }
     i = function[1]
     identifier_index = 0
     for argument in tup[2]:
-        stack_identifiers[i[identifier_index]] = evaluate(argument)
+        frame[i[identifier_index]] = evaluate(argument)
         identifier_index += 1
-    stack.append(stack_identifiers)
+    stack.append(frame)
     result = evaluate(function[2])
     stack.pop()
     return result
@@ -437,7 +437,9 @@ with open(sys.argv[1]) as f:
     lines = ""
     for line in f:
         lines += line
-    try:
-        evaluate(parser.parse(lines.replace("\n", "")))
-    except Exception as e:
-        print(e)
+    for line in map(lambda line: line.replace("\n", "").strip() + ";", lines.split(";")):
+        if line != ";":
+            try:
+                evaluate(parser.parse(line))
+            except Exception as e:
+                print(e)
