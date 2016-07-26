@@ -1,3 +1,5 @@
+import sys
+
 tokens = (
     "ASSIGN",
     "IF",
@@ -300,8 +302,9 @@ def p_error(p):
 
 evaluators = {}
 identifiers = {
-    "head": "head",
+    "exit": "exit",
     "float": "float",
+    "head": "head",
     "int": "int",
     "print": "print",
     "tail": "tail",
@@ -323,7 +326,9 @@ def function_evaluator(tup):
     if tup[0] == "function-define":
         return tup
     function = evaluate(tup[1])
-    if function == "type":
+    if function == "exit":
+        sys.exit()
+    elif function == "type":
         datatype = type(evaluate(tup[2][0]))
         if datatype is None:
             return "Null"
@@ -383,7 +388,6 @@ def case_evaluator(tup):
             if case == evaluate(when[1]):
                 return evaluate(when[2])
     return evaluate(tup[3])
-
 
 def arithmetic_evaluator(tup):
     operator = tup[0]
@@ -461,17 +465,30 @@ evaluators["list"] = list_evaluator
 evaluators["string"] = evaluators["number"] = evaluators["null"] = literal_evaluator
 evaluators["identifier"] = identifier_evaluator
 
-import sys
 from ply import yacc
 parser = yacc.yacc()
 
-with open(sys.argv[1]) as f:
-    lines = ""
-    for line in f:
-        lines += line
-    for line in map(lambda line: line.replace("\n", "").strip() + ";", lines.split(";")):
-        if line != ";":
+if len(sys.argv) > 1:
+    with open(sys.argv[1]) as f:
+        lines = ""
+        for line in f:
+            lines += line
+        for line in map(lambda line: line.replace("\n", "").strip() + ";", lines.split(";")):
+            if line != ";":
+                try:
+                    evaluate(parser.parse(line))
+                except Exception as e:
+                    print(e)
+
+statement = ""
+while True:
+    line = input()
+    for character in line:
+        statement += character
+        if character == ";":
             try:
-                evaluate(parser.parse(line))
+                evaluate(parser.parse(statement))
             except Exception as e:
                 print(e)
+            statement = ""
+        
