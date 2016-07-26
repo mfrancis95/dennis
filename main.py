@@ -3,6 +3,8 @@ tokens = (
     "IF",
     "THEN",
     "ELSE",
+    "CASE",
+    "WHEN",
     "NOT",
     "AND",
     "OR",
@@ -42,6 +44,14 @@ def t_THEN(t):
 
 def t_ELSE(t):
     "else"
+    return t
+
+def t_CASE(t):
+    "case"
+    return t
+
+def t_WHEN(t):
+    "when"
     return t
 
 def t_NOT(t):
@@ -184,6 +194,18 @@ def p_else_ifs_one(p):
 def p_else_ifs_many(p):
     "else_ifs : ELSE IF expression THEN expression else_ifs"
     p[0] = [("else-if", p[3], p[5])] + p[6]
+
+def p_expression_case(p):
+    "expression : CASE expression whens ELSE expression"
+    p[0] =("case", p[2], p[3], p[5])
+
+def p_expression_whens_one(p):
+    "whens : WHEN expression THEN expression"
+    p[0] = [("when", p[2], p[4])]
+
+def p_expression_whens_many(p):
+    "whens : WHEN expression THEN expression whens"
+    p[0] = [("when", p[2], p[4])] + p[5]
 
 def p_expression_multiply(p):
     "expression : expression MULTIPLY expression"
@@ -354,6 +376,15 @@ def conditional_evaluator(tup):
         return evaluate(tup[4])
     return evaluate(tup[2]) if evaluate(tup[1]) else 0
 
+def case_evaluator(tup):
+    case = evaluate(tup[1])
+    if tup[2]:
+        for when in tup[2]:
+            if case == evaluate(when[1]):
+                return evaluate(when[2])
+    return evaluate(tup[3])
+
+
 def arithmetic_evaluator(tup):
     operator = tup[0]
     if operator == "multiply":
@@ -422,6 +453,7 @@ evaluators["statements"] = statement_evaluator
 evaluators["assign"] = assign_evaluator
 evaluators["function-define"] = evaluators["function-call"] = function_evaluator
 evaluators["if"] = evaluators["else-if"] = conditional_evaluator
+evaluators["case"] = case_evaluator
 evaluators["multiply"] = evaluators["divide"] = evaluators["mod"] = evaluators["plus"] = evaluators["minus"] = arithmetic_evaluator
 evaluators["equals"] = evaluators["notequal"] = evaluators["lessthan"] = evaluators["lessthanorequal"] = evaluators["greaterthan"] = evaluators["greaterthanorequal"] = comparison_evaluator
 evaluators["not"] = evaluators["and"] = evaluators["or"] = logical_evaluator

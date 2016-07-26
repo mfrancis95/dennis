@@ -39,8 +39,8 @@ index = (element, list) -> index_helper(element, list, 0);
 
 insert = (element, index, list) ->
     if not list then
-        if type(list) == "List" then [element]
-        else if type(list) == "String" then element
+        case type(list) when "List" then [element]
+        when "String" then element
         else list
     else if index <= 0 then element + list
     else head(list) + self(element, index - 1, tail(list));
