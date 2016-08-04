@@ -14,9 +14,6 @@ tokens = (
     "STRING",
     "NUMBER",
     "IDENTIFIER",
-    "EQUALS",
-    "LEFTARROW",
-    "RIGHTARROW",
     "SEMICOLON",
     "ARROW",
     "LEFTPAREN",
@@ -24,6 +21,7 @@ tokens = (
     "LEFTBRACK",
     "RIGHTBRACK",
     "COMMA",
+    "EQUALS",
     "NOTEQUAL",
     "LESSTHAN",
     "LESSTHANEQ",
@@ -116,6 +114,7 @@ from ply import lex
 lexer = lex.lex()
 
 precedence = (
+    ("right", "ASSIGN"),
     ("left", "OR"),
     ("left", "AND"),
     ("left", "NOT"),
@@ -146,20 +145,28 @@ def p_expression_function_define_none(p):
     p[0] = ("function-define", [], p[4])
 
 def p_expression_function_define_one(p):
-    "expression : LEFTPAREN IDENTIFIER RIGHTPAREN ARROW expression"
+    "expression : LEFTPAREN argument RIGHTPAREN ARROW expression"
     p[0] = ("function-define", [p[2]], p[5])
 
 def p_expression_function_define_many(p):
-    "expression : LEFTPAREN IDENTIFIER identifiers RIGHTPAREN ARROW expression"
+    "expression : LEFTPAREN argument arguments RIGHTPAREN ARROW expression"
     p[0] = ("function-define", [p[2]] + p[3], p[6])
 
-def p_identifiers_one(p):
-    "identifiers : COMMA IDENTIFIER"
+def p_arguments_one(p):
+    "arguments : COMMA argument"
     p[0] = [p[2]]
 
-def p_identifiers_many(p):
-    "identifiers : COMMA IDENTIFIER identifiers"
+def p_arguments_many(p):
+    "arguments : COMMA argument arguments"
     p[0] = [p[2]] + p[3]
+
+def p_argument_identifier(p):
+    "argument : IDENTIFIER"
+    p[0] = ("argument", p[1], None)
+
+def p_argument_default(p):
+    "argument : IDENTIFIER ASSIGN expression"
+    p[0] = ("argument", p[1], p[3])
 
 def p_expression_function_call_none(p):
     "expression : expression LEFTPAREN RIGHTPAREN"
@@ -320,7 +327,7 @@ def statement_evaluator(tup):
         evaluate(statement)
 
 def assign_evaluator(tup):
-    identifiers[tup[1]] = evaluate(tup[2])    
+    identifiers[tup[1]] = evaluate(tup[2])
 
 def function_evaluator(tup):
     if tup[0] == "function-define":
@@ -328,6 +335,15 @@ def function_evaluator(tup):
     function = evaluate(tup[1])
     if function == "exit":
         sys.exit()
+    elif function == "print":
+        result = evaluate(tup[2][0])
+        if result is None:
+            print("null")
+        elif isinstance(result, tuple):
+            print("Function (" + ", ".join(map(lambda argument: argument[1], result[1])) + ") -> ?")
+        else:
+            print(result)
+        return result
     elif function == "type":
         datatype = type(evaluate(tup[2][0]))
         if datatype is None:
@@ -339,15 +355,6 @@ def function_evaluator(tup):
         elif datatype is int:
             return "Integer"
         return datatype.__name__.capitalize()
-    elif function == "print":
-        result = evaluate(tup[2][0])
-        if result is None:
-            print("null")
-        elif isinstance(result, tuple):
-            print("Function (" + ", ".join(result[1]) + ") -> ?")
-        else:
-            print(result)
-        return result
     elif function == "int":
         return int(evaluate(tup[2][0]))
     elif function == "float":
@@ -359,11 +366,15 @@ def function_evaluator(tup):
     frame = {
         "self": function
     }
-    i = function[1]
-    identifier_index = 0
-    for argument in tup[2]:
-        frame[i[identifier_index]] = evaluate(argument)
-        identifier_index += 1
+    arguments = function[1]
+    argument_index = 0
+    argument_length = len(tup[2])
+    for argument in arguments:
+        if argument_index >= argument_length:
+            frame[argument[1]] = evaluate(argument[2]) if argument[2] else None
+        else:
+            frame[argument[1]] = evaluate(tup[2][argument_index])
+        argument_index += 1
     stack.append(frame)
     result = evaluate(function[2])
     stack.pop()
@@ -480,9 +491,10 @@ if len(sys.argv) > 1:
                 except Exception as e:
                     print(e)
 
+multiple_lines = False
 statement = ""
 while True:
-    line = input()
+    line = input("| " if multiple_lines else "> ")
     for character in line:
         statement += character
         if character == ";":
@@ -490,5 +502,8 @@ while True:
                 evaluate(parser.parse(statement))
             except Exception as e:
                 print(e)
+            multiple_lines = False
             statement = ""
+        else:
+            multiple_lines = True
         

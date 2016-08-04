@@ -1,14 +1,14 @@
 abs = (n) -> if n < 0 then -1 * n else n;
 
-all = (function, list) ->
+all = (list, function = bool) ->
     if not list then 1
     else if not function(head(list)) then 0
-    else self(function, tail(list));
+    else self(tail(list), function);
 
-any = (function, list) ->
+any = (list, function = bool) ->
     if not list then 0
     else if function(head(list)) then 1
-    else self(function, tail(list));
+    else self(tail(list), function);
 
 bool = (x) -> if x then 1 else 0;
 
@@ -21,14 +21,14 @@ factorial = (n) ->
     if n <= 1 then 1
     else n * self(n - 1);
 
-enumerate = (list, start) ->
+enumerate = (list, start = 0) ->
     if not list then []
     else [[start, head(list)]] + self(tail(list), start + 1);
 
-filter = (function, list) ->
+filter = (list, function = bool) ->
     if not list then list
-    else if function(head(list)) then head(list) + self(function, tail(list))
-    else self(function, tail(list));
+    else if function(head(list)) then head(list) + self(tail(list), function)
+    else self(tail(list), function);
 
 index_helper = (element, list, i) ->
     if not list then -1
@@ -50,10 +50,7 @@ intersperse = (element, list) ->
     else if not tail(list) then [head(list), element]
     else [head(list), element] + self(element, tail(list));
 
-last = (list) ->
-    if not list then null
-    else if not tail(list) then head(list)
-    else self(tail(list));
+last = (list) -> reduce(list);
 
 length = (list) ->
     if not list then 0
@@ -65,30 +62,17 @@ list = (string) ->
 
 map = (function, list) ->
     if not list then list
-    else function(head(list)) + self(function, tail(list));
+    else if type(function) == "Function" then function(head(list)) + self(function, tail(list))
+    else function + self(function, tail(list));
 
-max_helper = (list, element) ->
-    if not list then element
-    else if head(list) > element then self(tail(list), head(list))
-    else self(tail(list), element);
-
-max = (list) ->
-    if not list then null
-    else max_helper(tail(list), head(list));
+max = (list) -> reduce(list, (x, y) -> if x > y then x else y);
 
 member = (element, list) ->
     if not list then 0
     else if element == head(list) then 1
     else self(element, tail(list));
 
-min_helper = (list, element) ->
-    if not list then element
-    else if head(list) < element then self(tail(list), head(list))
-    else self(tail(list), element);
-
-min = (list) ->
-    if not list then null
-    else min_helper(tail(list), head(list));
+min = (list) -> reduce(list, (x, y) -> if x < y then x else y);
 
 power = (base, exponent) ->
     if base == 0 then 0
@@ -96,26 +80,30 @@ power = (base, exponent) ->
     else if exponent == 1 then base
     else base * self(base, exponent - 1);
 
-product = (list) ->
-    if not list then 1
-    else head(list) * self(tail(list));
+product = (list) -> reduce(list, (x, y) -> x * y);
 
-range = (start, end, step) ->
-    if start >= end then []
-    else [start] + self(start + step, end, step);
+range = (start, end = null, step = 1) ->
+    if end == null then self(0, start, step)
+    else if start >= end then []
+    else start + self(start + step, end, step);
 
-reduce = (function, list) ->
-    if not list then list
+reduce = (list, function = (x, y) -> y) ->
+    if not list then null
     else if not tail(list) then head(list)
-    else function(head(list), self(function, tail(list)));
+    else function(head(list), self(tail(list), function));
+
+reject = (list, function = bool) ->
+    if not list then list
+    else if not function(head(list)) then head(list) + self(tail(list), function)
+    else self(tail(list), function);
 
 remove = (index, list) ->
     if not list then list
     else if index <= 0 then tail(list)
     else head(list) + self(index - 1, tail(list));
 
-repeat = (element, times) ->
-    if times <= 0 then null
+repeat = (element, times = 1) ->
+    if times < 0 then null
     else element + self(element, times - 1);
 
 reverse = (list) ->
@@ -126,6 +114,4 @@ string = (list) ->
     if not list then ""
     else head(list) + self(tail(list));
 
-sum = (list) ->
-    if not list then 0
-    else head(list) + self(tail(list));
+sum = (list) -> reduce(list, (x, y) -> x + y);
