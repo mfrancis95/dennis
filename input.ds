@@ -30,12 +30,10 @@ filter = (list, function = bool) ->
     else if function(head(list)) then head(list) + self(tail(list), function)
     else self(tail(list), function);
 
-index_helper = (element, list, i) ->
+index = (element, list, i = 0) ->
     if not list then -1
     else if element == head(list) then i
     else self(element, tail(list), i + 1);
-
-index = (element, list) -> index_helper(element, list, 0);
 
 insert = (element, index, list) ->
     if not list then
@@ -45,10 +43,7 @@ insert = (element, index, list) ->
     else if index <= 0 then element + list
     else head(list) + self(element, index - 1, tail(list));
 
-intersperse = (element, list) ->
-    if not list then [element]
-    else if not tail(list) then [head(list), element]
-    else [head(list), element] + self(element, tail(list));
+intersperse = (element, list) -> map((x) -> [[x, element]], list);
 
 last = (list) -> reduce(list);
 
@@ -67,10 +62,7 @@ map = (function, list) ->
 
 max = (list) -> reduce(list, (x, y) -> if x > y then x else y);
 
-member = (element, list) ->
-    if not list then 0
-    else if element == head(list) then 1
-    else self(element, tail(list));
+member = (element, list) -> any(list, (x) -> element == x);
 
 min = (list) -> reduce(list, (x, y) -> if x < y then x else y);
 
@@ -92,10 +84,7 @@ reduce = (list, function = (x, y) -> y) ->
     else if not tail(list) then head(list)
     else function(head(list), self(tail(list), function));
 
-reject = (list, function = bool) ->
-    if not list then list
-    else if not function(head(list)) then head(list) + self(tail(list), function)
-    else self(tail(list), function);
+reject = (list, func = bool) -> filter(list, (x) -> not func(x));
 
 remove = (index, list) ->
     if not list then list

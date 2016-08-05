@@ -309,13 +309,13 @@ def p_error(p):
 
 evaluators = {}
 identifiers = {
-    "exit": "exit",
-    "float": "float",
-    "head": "head",
-    "int": "int",
-    "print": "print",
-    "tail": "tail",
-    "type": "type"
+    "exit": ("function-define", [("argument", "x", None)], "exit"),
+    "float": ("function-define", [("argument", "x", None)], "float"),
+    "head": ("function-define", [("argument", "x", None)], "head"),
+    "int": ("function-define", [("argument", "x", None)], "int"),
+    "print": ("function-define", [("argument", "x", None)], "print"),
+    "tail": ("function-define", [("argument", "x", None)], "tail"),
+    "type": ("function-define", [("argument", "x", None)], "type")
 }
 stack = []
 
@@ -333,19 +333,19 @@ def function_evaluator(tup):
     if tup[0] == "function-define":
         return tup
     function = evaluate(tup[1])
-    if function == "exit":
+    if function[2] == "exit":
         sys.exit()
-    elif function == "print":
-        result = evaluate(tup[2][0])
+    elif function[2] == "print":
+        result = evaluate(tup[2][0]) if tup[2] else ""
         if result is None:
             print("null")
         elif isinstance(result, tuple):
             print("Function (" + ", ".join(map(lambda argument: argument[1], result[1])) + ") -> ?")
         else:
-            print(result)
+            print("\"" + result + "\"" if isinstance(result, str) else result)
         return result
-    elif function == "type":
-        datatype = type(evaluate(tup[2][0]))
+    elif function[2] == "type":
+        datatype = type(evaluate(tup[2][0])) if tup[2] else None
         if datatype is None:
             return "Null"
         elif datatype is tuple:
@@ -355,17 +355,18 @@ def function_evaluator(tup):
         elif datatype is int:
             return "Integer"
         return datatype.__name__.capitalize()
-    elif function == "int":
+    elif function[2] == "int":
         return int(evaluate(tup[2][0]))
-    elif function == "float":
+    elif function[2] == "float":
         return float(evaluate(tup[2][0]))
-    elif function == "head":
+    elif function[2] == "head":
         return evaluate(tup[2][0])[0]
-    elif function == "tail":
+    elif function[2] == "tail":
         return evaluate(tup[2][0])[1:]
-    frame = {
-        "self": function
-    }
+    frame = {}
+    if stack:
+        frame.update(stack[-1])
+    frame["self"] = function
     arguments = function[1]
     argument_index = 0
     argument_length = len(tup[2])
