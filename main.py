@@ -424,6 +424,10 @@ def arithmetic_evaluator(tup):
             return operand1 + [operand2]
         elif isinstance(operand2, list) and not isinstance(operand1, list):
             return [operand1] + operand2
+        elif isinstance(operand1, str):
+            return operand1 + str(operand2)
+        elif isinstance(operand2, str):
+            return str(operand1) + operand2
         return operand1 + operand2
     return evaluate(tup[1]) - evaluate(tup[2])
 
@@ -477,11 +481,17 @@ evaluators["list"] = list_evaluator
 evaluators["string"] = evaluators["number"] = evaluators["null"] = literal_evaluator
 evaluators["identifier"] = identifier_evaluator
 
+from argparse import ArgumentParser
+arg_parser = ArgumentParser()
+arg_parser.add_argument("files", nargs = "*")
+arg_parser.add_argument("-s", action = "store_true")
+args = arg_parser.parse_args()
+
 from ply import yacc
 parser = yacc.yacc()
 
-if len(sys.argv) > 1:
-    with open(sys.argv[1]) as f:
+for file in args.files:
+    with open(file) as f:
         lines = ""
         for line in f:
             lines += line
@@ -494,17 +504,23 @@ if len(sys.argv) > 1:
 
 multiple_lines = False
 statement = ""
+version = "0.0.0"
 while True:
-    line = input("| " if multiple_lines else "> ")
-    for character in line:
-        statement += character
-        if character == ";":
-            try:
-                evaluate(parser.parse(statement))
-            except Exception as e:
-                print(e)
-            multiple_lines = False
-            statement = ""
-        else:
-            multiple_lines = True
-        
+    line = input("dennis " + version + " | " if multiple_lines else "dennis " + version + " > ")
+    if args.s:
+        try:
+            evaluate(parser.parse(line.rstrip(";") + ";"))
+        except Exception as e:
+            print(e)
+    else:
+        for character in line:
+            statement += character
+            if character == ";":
+                try:
+                    evaluate(parser.parse(statement))
+                except Exception as e:
+                    print(e)
+                multiple_lines = False
+                statement = ""
+            else:
+                multiple_lines = True
