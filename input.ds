@@ -27,6 +27,18 @@ cycle = (list, times = 1, right = 0) ->
     else if right then self(last(list) + init(list), times - 1, right)
     else self(tail(list) + head(list), times - 1, right);
 
+difference = (list1, list2) -> filter(list1, (x) -> not member(x, list2));
+
+drop = (list, function) ->
+    if not list then list
+    else case type(function)
+        when "Function" then
+            if not function(head(list)) then list
+            else self(tail(list), function)
+        else
+            if function <= 0 then list
+            else self(tail(list), function - 1);
+
 factorial = (n) ->
     if n <= 1 then 1
     else n * self(n - 1);
@@ -79,6 +91,8 @@ intersperse = (element, list) ->
     if not list then [element]
     else if not tail(list) then head(list)
     else [head(list), element] + self(element, tail(list));
+
+is_subset = (list1, list2) -> all(list1, (x) -> member(x, list2));
 
 last = (list) -> reduce(list);
 
@@ -141,7 +155,7 @@ string = (list) ->
 sum = (list) -> reduce(list, (x, y) -> x + y);
 
 take = (list, function) ->
-    if not list then null
+    if not list then list
     else case type(function)
         when "Function" then
             if not function(head(list)) then null
